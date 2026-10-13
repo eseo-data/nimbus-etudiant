@@ -1,4 +1,4 @@
-"""Séance 1 — DÉFI ★★★ (facultatif, pour les plus curieux) : le vecteur persistant.
+"""Séance 1 ★★★ (facultatif, pour les plus curieux) : le vecteur persistant.
 
 Question laissée ouverte en cours : « l'immutabilité, c'est bien, mais copier un
 tuple d'un million d'éléments pour en changer UN, c'est ruineux ». Réponse des
@@ -64,17 +64,17 @@ def profondeur(v: Vecteur[Any]) -> int:
 
 
 def obtenir[T](v: Vecteur[T], i: int) -> T:
-    """D1 ★★ — l'élément d'indice i en O(log32 n). IndexError si i hors de [0, taille)."""
+    """D1 ★★ l'élément d'indice i en O(log32 n). IndexError si i hors de [0, taille)."""
     raise NotImplementedError("S01 — à compléter")
 
 
 def remplacer[T](v: Vecteur[T], i: int, x: T) -> Vecteur[T]:
-    """D2 ★★ — nouvelle version où l'élément i vaut x ; seul le chemin est recopié."""
+    """D2 ★★ nouvelle version où l'élément i vaut x ; seul le chemin est recopié."""
     raise NotImplementedError("S01 — à compléter")
 
 
 def ajouter[T](v: Vecteur[T], x: T) -> Vecteur[T]:
-    """D3 ★★★ — ajoute x à la fin.
+    """D3 ★★★ ajoute x à la fin.
 
     Trois cas : vecteur vide ; racine pleine (taille == 1 << (decalage + BITS)) : il
     faut une NOUVELLE racine, un niveau plus haut, dont le 2e enfant est un chemin neuf ;
@@ -85,7 +85,7 @@ def ajouter[T](v: Vecteur[T], x: T) -> Vecteur[T]:
 
 
 def retirer_dernier[T](v: Vecteur[T]) -> Vecteur[T]:
-    """D4 ★★★ — supprime le dernier élément (IndexError si vide).
+    """D4 ★★★ supprime le dernier élément (IndexError si vide).
 
     Attention aux nœuds devenus vides (à supprimer) et à la racine qui n'a plus
     qu'un enfant (l'arbre doit perdre un niveau).
@@ -94,7 +94,7 @@ def retirer_dernier[T](v: Vecteur[T]) -> Vecteur[T]:
 
 
 def vers_tuple[T](v: Vecteur[T]) -> tuple[T, ...]:
-    """D5 ★★ — tous les éléments dans l'ordre (parcours de l'arbre, sans appeler obtenir n fois)."""
+    """D5 ★★ tous les éléments dans l'ordre (parcours de l'arbre, sans appeler obtenir n fois)."""
     raise NotImplementedError("S01 — à compléter")
 
 

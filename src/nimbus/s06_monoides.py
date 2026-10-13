@@ -1,4 +1,4 @@
-"""Séance 6 — Structures algébriques : semigroupes, monoïdes et leurs lois.
+"""Séance 6 Structures algébriques : semigroupes, monoïdes et leurs lois.
 
 Un monoïde = (ensemble, élément neutre `vide`, opération `combiner` associative).
 Lois :   combiner(vide, a) == a == combiner(a, vide)
@@ -40,7 +40,7 @@ MINIMUM: Monoide[float] = Monoide(0.0, lambda a, b: a)  # TODO 6.1
 
 
 def concat_tuples[A]() -> Monoide[tuple[A, ...]]:
-    """Exercice 6.2 — monoïde de la concaténation de tuples."""
+    """Exercice 6.2 monoïde de la concaténation de tuples."""
     raise NotImplementedError("S06 — à compléter")
 
 
@@ -71,7 +71,7 @@ class Stats:
 
 
 def stats_de(x: float) -> Stats:
-    """Exercice 6.3 — les statistiques d'un seul point."""
+    """Exercice 6.3 les statistiques d'un seul point."""
     raise NotImplementedError("S06 — à compléter")
 
 
@@ -80,7 +80,7 @@ STATS: Monoide[Stats] = Monoide(Stats(0, 0.0, 0.0, 0.0, 0.0), lambda a, b: a)  #
 
 
 def fold_map[A, B](xs: Iterable[A], f: Callable[[A], B], m: Monoide[B]) -> B:
-    """Exercice 6.5 — transforme chaque élément puis réduit avec le monoïde."""
+    """Exercice 6.5 transforme chaque élément puis réduit avec le monoïde."""
     raise NotImplementedError("S06 — à compléter")
 
 
@@ -91,7 +91,7 @@ def morceaux[A](xs: Sequence[A], n: int) -> list[Sequence[A]]:
 
 
 def fold_map_parallele[A, B](xs: Sequence[A], f: Callable[[A], B], m: Monoide[B], n: int = 4) -> B:
-    """Exercice 6.6 — même résultat que fold_map, calculé par morceaux en parallèle.
+    """Exercice 6.6 même résultat que fold_map, calculé par morceaux en parallèle.
 
     1. découper avec `morceaux`  2. fold_map de chaque morceau dans un ThreadPoolExecutor
     3. recombiner les résultats partiels avec le monoïde.
@@ -101,7 +101,7 @@ def fold_map_parallele[A, B](xs: Sequence[A], f: Callable[[A], B], m: Monoide[B]
 
 
 def monoide_dict[K, V](m: Monoide[V]) -> Monoide[Mapping[K, V]]:
-    """Exercice 6.7 — combine deux dictionnaires clé par clé avec le monoïde des valeurs.
+    """Exercice 6.7 combine deux dictionnaires clé par clé avec le monoïde des valeurs.
 
     {"a": 1} ⊕ {"a": 2, "b": 3} == {"a": 3, "b": 3}   (avec SOMME)
     """
@@ -109,6 +109,6 @@ def monoide_dict[K, V](m: Monoide[V]) -> Monoide[Mapping[K, V]]:
 
 
 def stats_temperature_par_station(releves: Sequence[ReleveMesure]) -> Mapping[str, Stats]:
-    """Exercice 6.8 — fil rouge : statistiques de température (mesures valides uniquement)
+    """Exercice 6.8 fil rouge : statistiques de température (mesures valides uniquement)
     par station, en UNE passe `fold_map_parallele` avec `monoide_dict(STATS)`."""
     raise NotImplementedError("S06 — à compléter")

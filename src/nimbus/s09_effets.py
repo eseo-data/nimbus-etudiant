@@ -1,4 +1,4 @@
-"""Séance 9 — Effets fonctionnels : « un programme est une valeur » (à la ZIO).
+"""Séance 9 Effets fonctionnels : « un programme est une valeur » (à la ZIO).
 
 Idée popularisée par John A. De Goes (ZIO, Scala) : au lieu d'EXÉCUTER des effets
 de bord, on construit une DESCRIPTION du programme (une structure de données
@@ -109,7 +109,7 @@ def suspendre[A](thunk: Callable[[], A]) -> Effet[A]:
 
 
 def pour_chaque[A, B](xs: Iterable[A], f: Callable[[A], Effet[B]]) -> Effet[list[B]]:
-    """Exercice 9.7 — `traverse` pour les effets : exécute f sur chaque élément, en séquence,
+    """Exercice 9.7 `traverse` pour les effets : exécute f sur chaque élément, en séquence,
     et rassemble les résultats. Indice : partir de succes([]) et enchaîner des flat_map."""
     raise NotImplementedError("S09 — à compléter")
 
@@ -120,7 +120,7 @@ def pour_chaque[A, B](xs: Iterable[A], f: Callable[[A], Effet[B]]) -> Effet[list
 
 
 def executer[A](programme: Effet[A]) -> Result[A, Exception]:
-    """Exercice 9.8 — interpréteur itératif, sûr pour la pile.
+    """Exercice 9.8 interpréteur itératif, sûr pour la pile.
 
     On maintient `courant` (l'effet à évaluer) et une pile de continuations
     (des FlatMap et des Fold en attente).
@@ -147,7 +147,7 @@ class Services:
 
 
 def lire_fichier(s: Services, chemin: str) -> Effet[str]:
-    """Exercice 9.9 — décrire (sans exécuter !) la lecture d'un fichier."""
+    """Exercice 9.9 décrire (sans exécuter !) la lecture d'un fichier."""
     raise NotImplementedError("S09 — à compléter")
 
 

@@ -43,7 +43,7 @@ def analyser(ch: Chargement) -> str:
         lignes.append(f"  {station:<7} n={s.n:<4} moy={s.moyenne:5.1f}°C  min={s.mini:5.1f}  max={s.maxi:5.1f}")
     lignes.append("")
 
-    # Modèles (séances 7 et 8) — découpage déterministe 80/20
+    # Modèles (séances 7 et 8) découpage déterministe 80/20
     X, y = ml.construire_jeu(ch.releves)
     if len(y) < 50:
         return "\n".join(lignes + ["Pas assez de données pour entraîner un modèle."])
@@ -91,7 +91,7 @@ def services_reels() -> Services:
     return Services(lire=lambda p: Path(p).read_text(encoding="utf-8"), ecrire=ecrire, afficher=print)
 
 
-def main() -> None:  # pragma: no cover - coquille impérative
+def main() -> None:  # pragma: no cover coquille impérative
     from nimbus.s09_effets import executer
 
     chemin_csv = sys.argv[1] if len(sys.argv) > 1 else "data/meteo.csv"

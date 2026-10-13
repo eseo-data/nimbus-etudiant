@@ -1,4 +1,4 @@
-# Nimbus — fil rouge « Programmation fonctionnelle »
+# Nimbus fil rouge « Programmation fonctionnelle »
 
 ESEO, cycle ingénieur 5e année, spécialité IA & Data, module de 30 h (10 séances de 3 h).
 

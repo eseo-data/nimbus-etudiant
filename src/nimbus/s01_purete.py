@@ -1,4 +1,4 @@
-"""Séance 1 — Pureté, transparence référentielle, immutabilité.
+"""Séance 1 Pureté, transparence référentielle, immutabilité.
 
 Idée clé : une fonction pure ne dépend que de ses arguments et ne fait rien
 d'autre que renvoyer un résultat. On peut donc remplacer tout appel par sa

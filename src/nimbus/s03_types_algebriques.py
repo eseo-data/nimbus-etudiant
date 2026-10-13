@@ -1,4 +1,4 @@
-"""Séance 3 — Types algébriques de données (ADT) et filtrage par motif.
+"""Séance 3 Types algébriques de données (ADT) et filtrage par motif.
 
 Type produit  : « A ET B »  -> dataclass (un relevé a une date ET une station ET ...)
 Type somme    : « A OU B »  -> union de dataclasses (une mesure est valide OU manquante OU aberrante)
@@ -68,7 +68,7 @@ class ReleveMesure:
 
 
 def lire_mesure(brute: str, borne_min: float, borne_max: float) -> Mesure:
-    """Exercice 3.1 — transforme une chaîne brute en Mesure. Ne lève JAMAIS d'exception.
+    """Exercice 3.1 transforme une chaîne brute en Mesure. Ne lève JAMAIS d'exception.
 
     - chaîne (strippée) dans VALEURS_MANQUANTES        -> Manquante()
     - non convertible en float                          -> Aberrante(brute, "non numérique")
@@ -79,7 +79,7 @@ def lire_mesure(brute: str, borne_min: float, borne_max: float) -> Mesure:
 
 
 def valeur_ou(m: Mesure, defaut: float) -> float:
-    """Exercice 3.2 — la valeur si Valide, sinon `defaut`. Utiliser `match`."""
+    """Exercice 3.2 la valeur si Valide, sinon `defaut`. Utiliser `match`."""
     raise NotImplementedError("S03 — à compléter")
 
 
@@ -94,7 +94,7 @@ def decrire(m: Mesure) -> str:
 
 
 def lire_releve(date: str, station: str, champs: dict[str, str]) -> ReleveMesure:
-    """Exercice 3.4 — construit un ReleveMesure à partir des champs bruts.
+    """Exercice 3.4 construit un ReleveMesure à partir des champs bruts.
 
     `champs` associe chaque nom de BORNES à sa chaîne brute.
     """
@@ -107,10 +107,10 @@ def mesures(r: ReleveMesure) -> tuple[Mesure, ...]:
 
 
 def est_complet(r: ReleveMesure) -> bool:
-    """Exercice 3.5 — vrai si toutes les mesures du relevé sont Valide."""
+    """Exercice 3.5 vrai si toutes les mesures du relevé sont Valide."""
     raise NotImplementedError("S03 — à compléter")
 
 
 def compter_par_type(ms: Iterable[Mesure]) -> dict[str, int]:
-    """Exercice 3.6 — {"valide": n1, "manquante": n2, "aberrante": n3} (toujours les 3 clés)."""
+    """Exercice 3.6 {"valide": n1, "manquante": n2, "aberrante": n3} (toujours les 3 clés)."""
     raise NotImplementedError("S03 — à compléter")

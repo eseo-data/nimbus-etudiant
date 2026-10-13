@@ -1,4 +1,4 @@
-"""Séance 5 — Gestion fonctionnelle des erreurs : Option, Result, Validation.
+"""Séance 5 Gestion fonctionnelle des erreurs : Option, Result, Validation.
 
 Une exception est un `goto` invisible dans la signature. Ici l'échec devient une
 VALEUR : `Result[T, E] = Ok[T] | Err[E]` (Either en Scala/Haskell).
@@ -49,7 +49,7 @@ class Err[E]:
     erreur: E
 
     def map(self, f: Callable[[Any], Any]) -> Err[E]:
-        """Exercice 5.1c — un échec reste un échec."""
+        """Exercice 5.1c un échec reste un échec."""
         raise NotImplementedError("S05 — à compléter")
 
     def flat_map(self, f: Callable[[Any], Any]) -> Err[E]:
@@ -67,12 +67,12 @@ type Result[T, E] = Ok[T] | Err[E]
 
 
 def essayer[T](f: Callable[[], T]) -> Result[T, str]:
-    """Exercice 5.2 — pont avec le monde à exceptions : exécute f, capture l'exception en Err(message)."""
+    """Exercice 5.2 pont avec le monde des exceptions : exécute f, capture l'exception en Err(message)."""
     raise NotImplementedError("S05 — à compléter")
 
 
 def traverse[A, B, E](xs: Iterable[A], f: Callable[[A], Result[B, E]]) -> Result[list[B], E]:
-    """Exercice 5.3 — applique f à chaque élément ; Ok(liste) si tout réussit, sinon le PREMIER Err."""
+    """Exercice 5.3 applique f à chaque élément ; Ok(liste) si tout réussit, sinon le PREMIER Err."""
     raise NotImplementedError("S05 — à compléter")
 
 
@@ -100,7 +100,7 @@ def valider[T](condition: bool, valeur: T, message: str) -> Validation[T]:
 
 
 def combiner(*validations: Validation[Any]) -> Validation[tuple[Any, ...]]:
-    """Exercice 5.4 — combine N validations INDÉPENDANTES.
+    """Exercice 5.4 combine N validations INDÉPENDANTES.
 
     Tous Succes -> Succes(tuple des valeurs) ; sinon Echecs(concaténation de TOUTES les erreurs).
     """
@@ -118,7 +118,7 @@ def _date_iso(s: str) -> Validation[str]:
 
 
 def valider_ligne(champs: list[str]) -> Validation[ReleveMesure]:
-    """Exercice 5.5 — valide la STRUCTURE d'une ligne et construit le ReleveMesure.
+    """Exercice 5.5 valide la STRUCTURE d'une ligne et construit le ReleveMesure.
 
     Vérifications (toutes, sans s'arrêter à la première) :
       - nombre de colonnes == len(COLONNES)         sinon "attendu 7 colonnes, reçu N"
@@ -138,7 +138,7 @@ class Chargement:
 
 
 def charger(texte_csv: str) -> Chargement:
-    """Exercice 5.6 — découpe (séance 2) puis valide chaque ligne et partitionne.
+    """Exercice 5.6 découpe (séance 2) puis valide chaque ligne et partitionne.
 
     Numéro de ligne : 2 pour la première ligne de données (l'en-tête est la ligne 1).
     """

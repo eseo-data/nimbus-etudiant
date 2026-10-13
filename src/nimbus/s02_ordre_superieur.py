@@ -1,4 +1,4 @@
-"""Séance 2 — Fonctions d'ordre supérieur, composition, curryfication, paresse.
+"""Séance 2 Fonctions d'ordre supérieur, composition, curryfication, paresse.
 
 Une fonction est une valeur : on peut la passer, la renvoyer, la combiner.
 `map`, `filter` et `reduce` remplacent la plupart des boucles ; les générateurs

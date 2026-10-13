@@ -1,4 +1,4 @@
-"""Séance 7 — La programmation fonctionnelle au cœur du ML moderne : JAX.
+"""Séance 7 La programmation fonctionnelle au cœur du ML moderne : JAX.
 
 JAX exige des fonctions PURES. En échange, il offre des TRANSFORMATIONS DE FONCTIONS
 (des fonctions d'ordre supérieur !) :
@@ -67,17 +67,17 @@ class Dual:
 
 
 def exp_dual(x: Dual) -> Dual:
-    """Exercice 7.1c — exp(a + bε) = exp(a) + b·exp(a)·ε"""
+    """Exercice 7.1c exp(a + bε) = exp(a) + b·exp(a)·ε"""
     raise NotImplementedError("S07 — à compléter")
 
 
 def derivee(f: Callable[[Dual], Dual]) -> Callable[[float], float]:
-    """Exercice 7.1d — fonction d'ordre supérieur : renvoie la fonction dérivée de f."""
+    """Exercice 7.1d fonction d'ordre supérieur : renvoie la fonction dérivée de f."""
     raise NotImplementedError("S07 — à compléter")
 
 
 # ---------------------------------------------------------------------------
-# Partie B — jeu de données « va-t-il pleuvoir demain ? »
+# Partie B jeu de données « va-t-il pleuvoir demain ? »
 # ---------------------------------------------------------------------------
 
 SEUIL_PLUIE_MM = 0.2
@@ -88,7 +88,7 @@ def _veille_et_lendemain(r1: ReleveMesure, r2: ReleveMesure) -> bool:
 
 
 def construire_jeu(releves: Sequence[ReleveMesure]) -> tuple[list[tuple[float, ...]], list[float]]:
-    """Exercice 7.2 — exemples (x_t, y_{t+1}), station par station.
+    """Exercice 7.2 exemples (x_t, y_{t+1}), station par station.
 
     - trier par (station, date) puis grouper par station (itertools.groupby)
     - pour chaque couple de relevés CONSÉCUTIFS (zip(rs, rs[1:])) dont les dates

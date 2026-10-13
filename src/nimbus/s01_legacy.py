@@ -1,5 +1,5 @@
 # mypy: ignore-errors
-"""Séance 1, partie B — script HÉRITÉ, écrit « à l'ancienne ». NE PAS MODIFIER.
+"""Séance 1, partie B script HÉRITÉ, écrit « à l'ancienne ». NE PAS MODIFIER.
 
 Il lit le CSV Nimbus et affiche des statistiques de température par station.
 Il fonctionne… une fois. Lisez-le, repérez tout ce qui le rend impur, puis
