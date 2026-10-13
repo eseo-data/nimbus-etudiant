@@ -1,0 +1,39 @@
+[project]
+name = "nimbus"
+version = "0.1.0"
+description = "Fil rouge du module Programmation fonctionnelle — ESEO, 5e année IA & Data"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "jax>=0.4.30",   # version CPU : tourne sur n'importe quel laptop (macOS, Linux, Windows)
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "hypothesis>=6.100",
+    "mypy>=1.10",
+]
+
+[project.scripts]
+nimbus = "nimbus.app:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/nimbus"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.mypy]
+strict = true
+python_version = "3.12"
+files = ["src/nimbus"]
+
+[[tool.mypy.overrides]]
+module = ["jax.*"]
+ignore_missing_imports = true
