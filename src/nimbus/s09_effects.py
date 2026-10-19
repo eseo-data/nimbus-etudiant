@@ -1,4 +1,4 @@
-"""Séance 9 Effets fonctionnels : « un programme est une valeur » (à la ZIO).
+"""Séance 9 — Effets fonctionnels : « un programme est une valeur » (à la ZIO).
 
 Idée popularisée par John A. De Goes (ZIO, Scala) : au lieu d'EXÉCUTER des effets
 de bord, on construit une DESCRIPTION du programme (une structure de données
@@ -9,7 +9,7 @@ Conséquences :
 - le cœur métier reste pur, testable sans fichier ni réseau (on injecte de faux services) ;
 - l'interpréteur peut être sûr vis-à-vis de la pile (pas de récursion Python).
 
-Notre `Effet[A]` est une version minuscule de `ZIO[R, E, A]` : l'erreur est une
+Notre `Effect[A]` est une version minuscule de `ZIO[R, E, A]` : l'erreur est une
 `Exception` et l'environnement R est passé explicitement (`Services`).
 """
 
@@ -19,45 +19,45 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from typing import Any
 
-from nimbus.s05_erreurs import Err, Ok, Result
+from nimbus.s05_errors import Err, Ok, Result
 
 # ---------------------------------------------------------------------------
 # Les primitives (fournies) : un petit langage dont les programmes sont des valeurs
 # ---------------------------------------------------------------------------
 
 
-class Effet[A]:
+class Effect[A]:
     """Classe de base. Les combinateurs ci-dessous sont à compléter."""
 
-    def flat_map[B](self, f: Callable[[A], Effet[B]]) -> Effet[B]:
+    def flat_map[B](self, f: Callable[[A], Effect[B]]) -> Effect[B]:
         return FlatMap(self, f)
 
-    def fold[B](self, si_echec: Callable[[Exception], Effet[B]], si_succes: Callable[[A], Effet[B]]) -> Effet[B]:
-        return Fold(self, si_echec, si_succes)
+    def fold[B](self, on_failure: Callable[[Exception], Effect[B]], on_success: Callable[[A], Effect[B]]) -> Effect[B]:
+        return Fold(self, on_failure, on_success)
 
-    # -- Exercices 9.1 à 9.6 : n'utiliser QUE flat_map, fold, succes, echec -----
+    # -- Exercices 9.1 à 9.6 : n'utiliser QUE flat_map, fold, success, failure -----
 
-    def map[B](self, f: Callable[[A], B]) -> Effet[B]:
+    def map[B](self, f: Callable[[A], B]) -> Effect[B]:
         """Exercice 9.1"""
         raise NotImplementedError("S09 — à compléter")
 
-    def zip[B](self, autre: Effet[B]) -> Effet[tuple[A, B]]:
+    def zip[B](self, other: Effect[B]) -> Effect[tuple[A, B]]:
         """Exercice 9.2 — exécute self puis autre, renvoie le couple des résultats."""
         raise NotImplementedError("S09 — à compléter")
 
-    def tap(self, f: Callable[[A], Effet[Any]]) -> Effet[A]:
+    def tap(self, f: Callable[[A], Effect[Any]]) -> Effect[A]:
         """Exercice 9.3 — exécute l'effet f(a) pour son effet de bord, mais renvoie a."""
         raise NotImplementedError("S09 — à compléter")
 
-    def catch_all(self, gestionnaire: Callable[[Exception], Effet[A]]) -> Effet[A]:
-        """Exercice 9.4 — en cas d'échec, continue avec gestionnaire(erreur)."""
+    def catch_all(self, handler: Callable[[Exception], Effect[A]]) -> Effect[A]:
+        """Exercice 9.4 — en cas d'échec, continue avec handler(error)."""
         raise NotImplementedError("S09 — à compléter")
 
-    def or_else(self, alternative: Effet[A]) -> Effet[A]:
+    def or_else(self, alternative: Effect[A]) -> Effect[A]:
         """Exercice 9.5"""
         raise NotImplementedError("S09 — à compléter")
 
-    def retry(self, n: int) -> Effet[A]:
+    def retry(self, n: int) -> Effect[A]:
         """Exercice 9.6 — réessaie jusqu'à n fois supplémentaires.
 
         Question clé : pourquoi ceci est-il IMPOSSIBLE avec une fonction Python
@@ -67,50 +67,50 @@ class Effet[A]:
 
 
 @dataclass(frozen=True)
-class Reussir[A](Effet[A]):
-    valeur: A
+class Succeed[A](Effect[A]):
+    value: A
 
 
 @dataclass(frozen=True)
-class Echouer(Effet[Any]):
-    erreur: Exception
+class Fail(Effect[Any]):
+    error: Exception
 
 
 @dataclass(frozen=True)
-class Suspendre[A](Effet[A]):
-    """Encapsule un effet de bord SANS l'exécuter. Une exception levée devient un Echouer (échec)."""
+class Suspend[A](Effect[A]):
+    """Encapsule un effet de bord SANS l'exécuter. Une exception levée devient un Fail (échec)."""
 
     thunk: Callable[[], A]
 
 
 @dataclass(frozen=True)
-class FlatMap[A, B](Effet[B]):
-    effet: Effet[A]
-    suite: Callable[[A], Effet[B]]
+class FlatMap[A, B](Effect[B]):
+    effect: Effect[A]
+    then: Callable[[A], Effect[B]]
 
 
 @dataclass(frozen=True)
-class Fold[A, B](Effet[B]):
-    effet: Effet[A]
-    si_echec: Callable[[Exception], Effet[B]]
-    si_succes: Callable[[A], Effet[B]]
+class Fold[A, B](Effect[B]):
+    effect: Effect[A]
+    on_failure: Callable[[Exception], Effect[B]]
+    on_success: Callable[[A], Effect[B]]
 
 
-def succes[A](a: A) -> Effet[A]:
-    return Reussir(a)
+def success[A](a: A) -> Effect[A]:
+    return Succeed(a)
 
 
-def echec(e: Exception) -> Effet[Any]:
-    return Echouer(e)
+def failure(e: Exception) -> Effect[Any]:
+    return Fail(e)
 
 
-def suspendre[A](thunk: Callable[[], A]) -> Effet[A]:
-    return Suspendre(thunk)
+def suspend[A](thunk: Callable[[], A]) -> Effect[A]:
+    return Suspend(thunk)
 
 
-def pour_chaque[A, B](xs: Iterable[A], f: Callable[[A], Effet[B]]) -> Effet[list[B]]:
-    """Exercice 9.7 `traverse` pour les effets : exécute f sur chaque élément, en séquence,
-    et rassemble les résultats. Indice : partir de succes([]) et enchaîner des flat_map."""
+def for_each[A, B](xs: Iterable[A], f: Callable[[A], Effect[B]]) -> Effect[list[B]]:
+    """Exercice 9.7 — `traverse` pour les effets : exécute f sur chaque élément, en séquence,
+    et rassemble les résultats. Indice : partir de success([]) et enchaîner des flat_map."""
     raise NotImplementedError("S09 — à compléter")
 
 
@@ -119,17 +119,17 @@ def pour_chaque[A, B](xs: Iterable[A], f: Callable[[A], Effet[B]]) -> Effet[list
 # ---------------------------------------------------------------------------
 
 
-def executer[A](programme: Effet[A]) -> Result[A, Exception]:
-    """Exercice 9.8 interpréteur itératif, sûr pour la pile.
+def execute[A](program: Effect[A]) -> Result[A, Exception]:
+    """Exercice 9.8 — interpréteur itératif, sûr pour la pile.
 
-    On maintient `courant` (l'effet à évaluer) et une pile de continuations
+    On maintient `current` (l'effet à évaluer) et une pile de continuations
     (des FlatMap et des Fold en attente).
-      Reussir(v)    : dépiler jusqu'à trouver une continuation de succès
-                      (FlatMap.suite ou Fold.si_succes) ; pile vide -> Ok(v)
-      Echouer(e)    : dépiler en IGNORANT les FlatMap jusqu'à un Fold -> si_echec(e) ;
+      Succeed(v)    : dépiler jusqu'à trouver une continuation de succès
+                      (FlatMap.then ou Fold.on_success) ; pile vide -> Ok(v)
+      Fail(e)    : dépiler en IGNORANT les FlatMap jusqu'à un Fold -> on_failure(e) ;
                       pile vide -> Err(e)
-      Suspendre(t)  : exécuter t() ; résultat -> Reussir, exception -> Echouer
-      FlatMap/Fold  : empiler le nœud, continuer avec son `effet`
+      Suspend(t)  : exécuter t() ; résultat -> Succeed, exception -> Fail
+      FlatMap/Fold  : empiler le nœud, continuer avec son `effect`
     """
     raise NotImplementedError("S09 — à compléter")
 
@@ -141,21 +141,21 @@ def executer[A](programme: Effet[A]) -> Result[A, Exception]:
 
 @dataclass(frozen=True)
 class Services:
-    lire: Callable[[str], str]
-    ecrire: Callable[[str, str], None]
-    afficher: Callable[[str], None]
+    read: Callable[[str], str]
+    save: Callable[[str, str], None]
+    display: Callable[[str], None]
 
 
-def lire_fichier(s: Services, chemin: str) -> Effet[str]:
-    """Exercice 9.9 décrire (sans exécuter !) la lecture d'un fichier."""
+def read_file(s: Services, path: str) -> Effect[str]:
+    """Exercice 9.9 — décrire (sans exécuter !) la lecture d'un fichier."""
     raise NotImplementedError("S09 — à compléter")
 
 
-def ecrire_fichier(s: Services, chemin: str, contenu: str) -> Effet[None]:
+def write_file(s: Services, path: str, content: str) -> Effect[None]:
     """Exercice 9.10"""
     raise NotImplementedError("S09 — à compléter")
 
 
-def afficher(s: Services, message: str) -> Effet[None]:
+def display(s: Services, message: str) -> Effect[None]:
     """Exercice 9.11"""
     raise NotImplementedError("S09 — à compléter")

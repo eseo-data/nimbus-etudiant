@@ -1,7 +1,8 @@
-"""Assemblage final (séance 9) : cœur fonctionnel, coquille impérative.
+"""Assemblage final (bloc 4) : functional core, imperative shell.
 
-    uv run nimbus                     # génère les données si besoin, analyse, écrit le rapport
+    uv run nimbus                     # tronc commun : qualité des données + stats par station
     uv run nimbus data/meteo.csv rapport.txt
+    uv run nimbus-bd                  # parcours Big Data : + monoids, JAX, decision tree
 
 Tout ce qui est au-dessus de `main()` est pur ou décrit des effets sans les exécuter.
 Seul `main()` appelle l'interpréteur.
@@ -12,41 +13,64 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-import jax.numpy as jnp
+from collections.abc import Callable, Sequence
 
-from nimbus import s07_ml_fonctionnel as ml
-from nimbus.donnees import generer_csv
-from nimbus.s03_types_algebriques import compter_par_type, mesures
-from nimbus.s05_erreurs import Chargement, Err, Ok, charger
-from nimbus.s06_monoides import stats_temperature_par_station
-from nimbus.s08_arbres import afficher as afficher_arbre
-from nimbus.s08_arbres import construire, elaguer, predire
-from nimbus.s09_effets import Effet, Services, afficher, ecrire_fichier, lire_fichier, succes
+from nimbus.datagen import generate_csv
+from nimbus.s03_algebraic_types import TypedReading, Valid, count_by_kind, measurements
+from nimbus.s05_errors import Loaded, Err, Ok, load
+from nimbus.s09_effects import Effect, Services, display, write_file, read_file, success
 
 
-def analyser(ch: Chargement) -> str:
-    """CŒUR PUR : un chargement -> un rapport texte. Testable sans aucun fichier."""
-    lignes = ["=== Rapport Nimbus ===", ""]
+def temperatures_by_station(readings: Sequence[TypedReading]) -> dict[str, tuple[float, ...]]:
+    """Fourni : températures valides par station (tronc commun, sans monoid)."""
+    stations = sorted({r.station for r in readings})
+    return {st: tuple(r.temperature_c.value for r in readings
+                      if r.station == st and isinstance(r.temperature_c, Valid))
+            for st in stations}
 
-    # Qualité des données (séances 3 et 5)
-    qualite = compter_par_type(m for r in ch.releves for m in mesures(r))
-    lignes += [
-        f"Relevés acceptés : {len(ch.releves)}   lignes rejetées : {len(ch.rejets)}",
-        f"Mesures : {qualite}",
-        *(f"  ligne {n} : {'; '.join(es)}" for n, es in ch.rejets[:5]),
+
+def quality_lines(ch: Loaded) -> list[str]:
+    """Fourni : en-tête du rapport et qualité des données (blocs 2 et 3)."""
+    quality = count_by_kind(m for r in ch.readings for m in measurements(r))
+    return [
+        "=== Rapport Nimbus ===",
+        "",
+        f"Relevés acceptés : {len(ch.readings)}   lignes rejetées : {len(ch.rejected)}",
+        f"Mesures : {quality}",
+        *(f"  ligne {n} : {'; '.join(es)}" for n, es in ch.rejected[:5]),
         "",
     ]
 
-    # Statistiques par station (séance 6)
-    lignes.append("Température par station :")
-    for station, s in sorted(stats_temperature_par_station(ch.releves).items()):
-        lignes.append(f"  {station:<7} n={s.n:<4} moy={s.moyenne:5.1f}°C  min={s.mini:5.1f}  max={s.maxi:5.1f}")
-    lignes.append("")
 
-    # Modèles (séances 7 et 8) découpage déterministe 80/20
-    X, y = ml.construire_jeu(ch.releves)
+def analyze(ch: Loaded) -> str:
+    """CŒUR PUR (tronc commun, blocs 1 à 4) : un chargement -> un rapport texte."""
+    lines = [*quality_lines(ch), "Température par station :"]
+    for station, ts in temperatures_by_station(ch.readings).items():
+        if ts:
+            lines.append(f"  {station:<7} n={len(ts):<4} moy={sum(ts) / len(ts):5.1f}°C  "
+                          f"min={min(ts):5.1f}  max={max(ts):5.1f}")
+    return "\n".join(lines)
+
+
+def analyze_full(ch: Loaded) -> str:
+    """CŒUR PUR (parcours Big Data, BD1 et BD4) : tronc commun + monoids + modèles."""
+    import jax.numpy as jnp
+
+    from nimbus import s07_functional_ml as ml
+    from nimbus.s06_monoids import temperature_stats_by_station
+    from nimbus.s08_trees import display as render_tree
+    from nimbus.s08_trees import build, prune, predict
+
+    lines = quality_lines(ch)
+    lines.append("Température par station (monoid Stats, agrégation parallèle) :")
+    for station, s in sorted(temperature_stats_by_station(ch.readings).items()):
+        lines.append(f"  {station:<7} n={s.n:<4} moy={s.average:5.1f}°C  min={s.minimum:5.1f}  max={s.maximum:5.1f}")
+    lines.append("")
+
+    # Modèles (BD4) — découpage déterministe 80/20
+    X, y = ml.build_dataset(ch.readings)
     if len(y) < 50:
-        return "\n".join(lignes + ["Pas assez de données pour entraîner un modèle."])
+        return "\n".join(lines + ["Pas assez de données pour entraîner un modèle."])
     test = [i % 5 == 0 for i in range(len(y))]
     Xa = [x for x, t in zip(X, test) if not t]
     ya = [v for v, t in zip(y, test) if not t]
@@ -54,57 +78,65 @@ def analyser(ch: Chargement) -> str:
     yt = [v for v, t in zip(y, test) if t]
 
     base = max(sum(yt), len(yt) - sum(yt)) / len(yt)
-    lignes.append(f"Référence (classe majoritaire) : {base:.1%}")
+    lines.append(f"Référence (classe majoritaire) : {base:.1%}")
 
-    Xa_j, norm = ml.standardiser(jnp.array(Xa))
-    Xt_j = (jnp.array(Xt) - norm.moyenne) / norm.ecart_type
-    params, pertes = ml.entrainer(ml.init_params(Xa_j.shape[1]), Xa_j, jnp.array(ya))
-    lignes.append(
-        f"Régression logistique (JAX) : exactitude test {ml.exactitude(params, Xt_j, jnp.array(yt)):.1%}"
-        f"   (perte {float(pertes[0]):.3f} -> {float(pertes[-1]):.3f})"
+    Xa_j, norm = ml.standardize(jnp.array(Xa))
+    Xt_j = (jnp.array(Xt) - norm.average) / norm.std_dev
+    params, losses = ml.train(ml.init_params(Xa_j.shape[1]), Xa_j, jnp.array(ya))
+    lines.append(
+        f"Régression logistique (JAX) : exactitude test {ml.accuracy(params, Xt_j, jnp.array(yt)):.1%}"
+        f"   (perte {float(losses[0]):.3f} -> {float(losses[-1]):.3f})"
     )
 
-    arbre = elaguer(construire(Xa, ya, profondeur_max=3))
-    acc_arbre = sum((predire(arbre, x) > 0.5) == (v > 0.5) for x, v in zip(Xt, yt)) / len(yt)
-    lignes += [f"Arbre de décision : exactitude test {acc_arbre:.1%}", "", afficher_arbre(arbre)]
-    return "\n".join(lignes)
+    tree = prune(build(Xa, ya, max_depth=3))
+    acc_tree = sum((predict(tree, x) > 0.5) == (v > 0.5) for x, v in zip(Xt, yt)) / len(yt)
+    lines += [f"Tree de décision : exactitude test {acc_tree:.1%}", "", render_tree(tree)]
+    return "\n".join(lines)
 
 
-def programme(s: Services, chemin_csv: str, chemin_rapport: str) -> Effet[str]:
-    """DESCRIPTION du programme complet. Rien ne s'exécute ici."""
+def program(s: Services, csv_path: str, report_path: str,
+              analysis: Callable[[Loaded], str] = analyze) -> Effect[str]:
+    """DESCRIPTION du programme complet. Rien ne s'exécute ici.
+
+    `analysis` est une higher-order function : `analyze` (tronc commun) ou `analyze_full`.
+    """
     return (
-        lire_fichier(s, chemin_csv)
+        read_file(s, csv_path)
         .retry(2)
-        .map(charger)
-        .tap(lambda ch: afficher(s, f"Chargé : {len(ch.releves)} relevés, {len(ch.rejets)} rejets"))
-        .map(analyser)
-        .tap(lambda rapport: ecrire_fichier(s, chemin_rapport, rapport))
-        .tap(lambda rapport: afficher(s, rapport))
-        .catch_all(lambda e: afficher(s, f"Échec : {e}").flat_map(lambda _: succes("")))
+        .map(load)
+        .tap(lambda ch: display(s, f"Chargé : {len(ch.readings)} relevés, {len(ch.rejected)} rejets"))
+        .map(analysis)
+        .tap(lambda report: write_file(s, report_path, report))
+        .tap(lambda report: display(s, report))
+        .catch_all(lambda e: display(s, f"Échec : {e}").flat_map(lambda _: success("")))
     )
 
 
-def services_reels() -> Services:
-    def ecrire(chemin: str, contenu: str) -> None:
-        Path(chemin).write_text(contenu, encoding="utf-8")
+def real_services() -> Services:
+    def save(path: str, content: str) -> None:
+        Path(path).write_text(content, encoding="utf-8")
 
-    return Services(lire=lambda p: Path(p).read_text(encoding="utf-8"), ecrire=ecrire, afficher=print)
+    return Services(read=lambda p: Path(p).read_text(encoding="utf-8"), save=save, display=print)
 
 
-def main() -> None:  # pragma: no cover coquille impérative
-    from nimbus.s09_effets import executer
+def main(analysis: Callable[[Loaded], str] = analyze) -> None:  # pragma: no cover - coquille impérative
+    from nimbus.s09_effects import execute
 
-    chemin_csv = sys.argv[1] if len(sys.argv) > 1 else "data/meteo.csv"
-    chemin_rapport = sys.argv[2] if len(sys.argv) > 2 else "rapport.txt"
-    if not Path(chemin_csv).exists():
-        Path(chemin_csv).parent.mkdir(parents=True, exist_ok=True)
-        Path(chemin_csv).write_text(generer_csv(), encoding="utf-8")
-    match executer(programme(services_reels(), chemin_csv, chemin_rapport)):
+    csv_path = sys.argv[1] if len(sys.argv) > 1 else "data/meteo.csv"
+    report_path = sys.argv[2] if len(sys.argv) > 2 else "rapport.txt"
+    if not Path(csv_path).exists():
+        Path(csv_path).parent.mkdir(parents=True, exist_ok=True)
+        Path(csv_path).write_text(generate_csv(), encoding="utf-8")
+    match execute(program(real_services(), csv_path, report_path, analysis)):
         case Ok(_):
             pass
         case Err(e):
             print(f"Erreur fatale : {e}", file=sys.stderr)
             sys.exit(1)
+
+
+def main_bd() -> None:  # pragma: no cover
+    main(analyze_full)
 
 
 if __name__ == "__main__":  # pragma: no cover

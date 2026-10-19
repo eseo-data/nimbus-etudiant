@@ -1,13 +1,13 @@
 import pytest
 
-from nimbus.donnees import generer_csv
+from nimbus.datagen import generate_csv
 
 
 @pytest.fixture(scope="session")
-def csv_petit() -> str:
-    return generer_csv(graine=7, n_jours=60)
+def csv_small() -> str:
+    return generate_csv(seed=7, n_days=60)
 
 
 @pytest.fixture(scope="session")
-def csv_complet() -> str:
-    return generer_csv()
+def csv_full() -> str:
+    return generate_csv()

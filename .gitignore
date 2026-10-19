@@ -7,3 +7,5 @@ __pycache__/
 .bsp/
 data/
 rapport.txt
+.DS_Store
+.idea/

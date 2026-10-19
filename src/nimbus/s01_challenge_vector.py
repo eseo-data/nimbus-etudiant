@@ -1,4 +1,4 @@
-"""Séance 1 ★★★ (facultatif, pour les plus curieux) : le vecteur persistant.
+"""Séance 1 — DÉFI ★★★ (facultatif, pour les plus curieux) : le vecteur persistant.
 
 Question laissée ouverte en cours : « l'immutabilité, c'est bien, mais copier un
 tuple d'un million d'éléments pour en changer UN, c'est ruineux ». Réponse des
@@ -20,9 +20,9 @@ où l'on prend i & 31.
 
 Représentation imposée (les tests en dépendent) :
 - une feuille est un `tuple` de valeurs ; un nœud interne est un `tuple` de nœuds ;
-- `decalage` = 5 × (hauteur - 1) : 0 quand la racine est elle-même une feuille ;
+- `offset` = 5 × (hauteur - 1) : 0 quand la racine est elle-même une feuille ;
 - aucun nœud vide ne doit subsister, et la racine n'a jamais un seul enfant
-  si decalage > 0 (sauf transitoirement : voir `retirer_dernier`).
+  si decalage > 0 (sauf transitoirement : voir `pop_last`).
 
 Difficulté : D1, D2, D5 ★★ ; D3, D4 ★★★ ; D6 ★★★★ (hors barème). Les tests vérifient le partage
 structurel : une copie complète échoue, même si le résultat est juste.
@@ -36,47 +36,47 @@ from functools import reduce
 from typing import Any
 
 BITS = 5
-LARGEUR = 1 << BITS      # 32
-MASQUE = LARGEUR - 1     # 0b11111
+WIDTH = 1 << BITS      # 32
+MASK = WIDTH - 1     # 0b11111
 
-type Noeud = tuple[Any, ...]
+type Node = tuple[Any, ...]
 
 
 @dataclass(frozen=True)
-class Vecteur[T]:
-    taille: int
-    decalage: int
-    racine: Noeud
+class Vector[T]:
+    size: int
+    offset: int
+    root: Node
 
     def __len__(self) -> int:
-        return self.taille
+        return self.size
 
     def __iter__(self) -> Iterator[T]:
-        return iter(vers_tuple(self))
+        return iter(to_tuple(self))
 
 
-VIDE: Vecteur[Any] = Vecteur(0, 0, ())
+EMPTY: Vector[Any] = Vector(0, 0, ())
 
 
-def profondeur(v: Vecteur[Any]) -> int:
+def depth(v: Vector[Any]) -> int:
     """Fourni : nombre de niveaux de l'arbre."""
-    return v.decalage // BITS + 1
+    return v.offset // BITS + 1
 
 
-def obtenir[T](v: Vecteur[T], i: int) -> T:
-    """D1 ★★ l'élément d'indice i en O(log32 n). IndexError si i hors de [0, taille)."""
+def lookup[T](v: Vector[T], i: int) -> T:
+    """D1 ★★ — l'élément d'indice i en O(log32 n). IndexError si i hors de [0, size)."""
     raise NotImplementedError("S01 — à compléter")
 
 
-def remplacer[T](v: Vecteur[T], i: int, x: T) -> Vecteur[T]:
-    """D2 ★★ nouvelle version où l'élément i vaut x ; seul le chemin est recopié."""
+def update[T](v: Vector[T], i: int, x: T) -> Vector[T]:
+    """D2 ★★ — nouvelle version où l'élément i vaut x ; seul le chemin est recopié."""
     raise NotImplementedError("S01 — à compléter")
 
 
-def ajouter[T](v: Vecteur[T], x: T) -> Vecteur[T]:
-    """D3 ★★★ ajoute x à la fin.
+def append[T](v: Vector[T], x: T) -> Vector[T]:
+    """D3 ★★★ — ajoute x à la fin.
 
-    Trois cas : vecteur vide ; racine pleine (taille == 1 << (decalage + BITS)) : il
+    Trois cas : vecteur vide ; racine pleine (size == 1 << (offset + BITS)) : il
     faut une NOUVELLE racine, un niveau plus haut, dont le 2e enfant est un chemin neuf ;
     sinon : descendre en recopiant le chemin, et créer un chemin neuf là où l'enfant
     n'existe pas encore.
@@ -84,8 +84,8 @@ def ajouter[T](v: Vecteur[T], x: T) -> Vecteur[T]:
     raise NotImplementedError("S01 — à compléter")
 
 
-def retirer_dernier[T](v: Vecteur[T]) -> Vecteur[T]:
-    """D4 ★★★ supprime le dernier élément (IndexError si vide).
+def pop_last[T](v: Vector[T]) -> Vector[T]:
+    """D4 ★★★ — supprime le dernier élément (IndexError si vide).
 
     Attention aux nœuds devenus vides (à supprimer) et à la racine qui n'a plus
     qu'un enfant (l'arbre doit perdre un niveau).
@@ -93,14 +93,14 @@ def retirer_dernier[T](v: Vecteur[T]) -> Vecteur[T]:
     raise NotImplementedError("S01 — à compléter")
 
 
-def vers_tuple[T](v: Vecteur[T]) -> tuple[T, ...]:
-    """D5 ★★ tous les éléments dans l'ordre (parcours de l'arbre, sans appeler obtenir n fois)."""
+def to_tuple[T](v: Vector[T]) -> tuple[T, ...]:
+    """D5 ★★ — tous les éléments dans l'ordre (parcours de l'arbre, sans appeler obtenir n fois)."""
     raise NotImplementedError("S01 — à compléter")
 
 
-def depuis[T](xs: Iterable[T]) -> Vecteur[T]:
-    """Fourni : un fold d'`ajouter` (séance 4 !)."""
-    return reduce(ajouter, xs, VIDE)
+def from_iterable[T](xs: Iterable[T]) -> Vector[T]:
+    """Fourni : un fold d'`append` (séance 4 !)."""
+    return reduce(append, xs, EMPTY)
 
 
 # ---------------------------------------------------------------------------
