@@ -31,8 +31,8 @@ tout tourne sur un laptop ordinaire.
 | 2 | tous | `s02_higher_order.py`, `s03_algebraic_types.py`, `s03_pipeline.py` (défi : `s02_challenge_rules.py`) | higher-order functions, lazy evaluation, algebraic data types |
 | 3 | tous | `s04_recursion.py`, `s05_errors.py` | recursion, folds, errors as values |
 | 4 | tous | `s09_effects.py`, `app.py`, `scala/` | functional effects, Scala 3, QCM |
-| BD1 | Big Data | `s06_monoids.py` | monoids, property-based testing, MapReduce |
-| BD2 | Big Data | `bd2_engine.py` | Polars lazy, Spark, query plan, lineage |
+| BD1 | Big Data | `s06_monoids.py`, `s06_mapreduce.py` (défi : `s06_challenge_hll.py`) | monoids, property-based testing, MapReduce |
+| BD2 | Big Data | `bd2_engine.py` (défi : `bd2_challenge_planner.py`) | Polars lazy, Spark, query plan, lineage |
 | BD3 | Big Data | `bd3_streaming.py` | stream processing : windows, watermark, idempotence |
 | BD4 | Big Data | `s07_functional_ml.py`, `s08_trees.py` | JAX, decision tree en ADT, projet |
 

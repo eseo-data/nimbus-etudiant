@@ -10,6 +10,12 @@ Les deux moteurs appliquent les idées du tronc commun à grande échelle :
   rejouant les transformations, ce qui n'est possible que parce qu'elles sont pures ;
 - `aggregateByKey(zero, seqOp, combOp)` est exactement un monoid (bloc BD1).
 
+Organisation du TP :
+- partie A (BD2.1 à BD2.4) : Polars lazy ;
+- partie B (BD2.5) : réécrire en lazy le rapport eager de `bd2_legacy_report.py` ;
+- partie C (BD2.6 à BD2.9) : les mêmes calculs avec Spark, et le monoid de BD1 en RDD ;
+- défi : `bd2_challenge_planner.py`, un mini query optimizer.
+
 Données : `uv run python -m nimbus.datagen --massif data/meteo_massif.csv 1000`
 (environ 3,65 millions de lignes, 1 000 stations sur 10 ans).
 
@@ -78,8 +84,33 @@ def plan(lf: pl.LazyFrame) -> str:
     return str(lf.explain())
 
 
+def temperature_anomalies(lf: pl.LazyFrame) -> pl.LazyFrame:
+    """Exercice BD2.4 — écart de chaque température à la moyenne de sa station (window function).
+
+    Colonnes : date, station, temperature_c, anomaly ; lignes où temperature_c n'est pas null,
+    triées par station puis date. Indice : `pl.col("temperature_c").mean().over("station")`.
+    """
+    raise NotImplementedError("BD2 — à compléter")
+
+
 # ===========================================================================
-# Partie B — Spark (PySpark en mode local)
+# Partie B — réécrire un rapport eager en lazy
+# ===========================================================================
+
+
+def wettest_months(lf: pl.LazyFrame, year: int, n: int) -> pl.LazyFrame:
+    """Exercice BD2.5 — même résultat que `bd2_legacy_report.wettest_months`, en lazy.
+
+    Sur des données déjà nettoyées (`clean`) : pour l'année `year`, cumul de rain_mm par
+    (station, mois), les n plus grands. Colonnes : station, month (Int8 ou Int32), rain_mm ;
+    tri par rain_mm décroissant puis station puis month (pour départager les égalités).
+    Arrondir le cumul à 1 décimale, comme le legacy.
+    """
+    raise NotImplementedError("BD2 — à compléter")
+
+
+# ===========================================================================
+# Partie C — Spark (PySpark en mode local)
 # ===========================================================================
 
 
@@ -104,7 +135,7 @@ def spark_read(spark: SparkSession, path: str) -> DataFrame:
 
 
 def spark_clean(df: DataFrame) -> DataFrame:
-    """Exercice BD2.4 — mêmes règles que `clean`, avec l'API DataFrame de Spark.
+    """Exercice BD2.6 — mêmes règles que `clean`, avec l'API DataFrame de Spark.
 
     Indices : `F.try_to_date(col, "yyyy-MM-dd")` (ou `F.to_date` avec ANSI désactivé),
     `col.try_cast("double")`, `F.when(cond, value)` (null sinon).
@@ -113,17 +144,26 @@ def spark_clean(df: DataFrame) -> DataFrame:
 
 
 def spark_stats_by_station(df: DataFrame) -> DataFrame:
-    """Exercice BD2.5 — même résultat que `stats_by_station`, en Spark (colonnes et tri identiques)."""
+    """Exercice BD2.7 — même résultat que `stats_by_station`, en Spark (colonnes et tri identiques)."""
     raise NotImplementedError("BD2 — à compléter")
 
 
 def rdd_stats_by_station(rdd: RDD[tuple[str, float]]) -> dict[str, Stats]:
-    """Exercice BD2.6 — le monoid Stats du bloc BD1, distribué avec `aggregateByKey`.
+    """Exercice BD2.8 — le monoid Stats du bloc BD1, distribué avec `aggregateByKey`.
 
     `rdd` contient des paires (station, température). Utilisez STATS.empty comme zéro,
     une seqOp qui combine l'accumulateur avec `stats_of(t)`, et STATS.combine comme
     combOp. Renvoyez le résultat collecté sous forme de dict.
     Question : pourquoi Spark exige-t-il que combOp soit associative ?
+    """
+    raise NotImplementedError("BD2 — à compléter")
+
+
+def spark_wettest_months(df: DataFrame, year: int, n: int) -> DataFrame:
+    """Exercice BD2.9 — `wettest_months` avec l'API DataFrame de Spark (mêmes colonnes, même tri).
+
+    `df` sort de `spark_clean`. Indices : `F.year`, `F.month`, `F.round(F.sum(...), 1)`,
+    `orderBy(F.desc("rain_mm"), "station", "month")`, `limit(n)`.
     """
     raise NotImplementedError("BD2 — à compléter")
 

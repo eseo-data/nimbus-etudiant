@@ -113,3 +113,42 @@ def test_rdd_monoid_and_lineage(spark, csv_path):
     for st, s in stats.items():
         assert s.n == ref[st][0] and math.isclose(s.average, ref[st][1])
     assert "MapPartitionsRDD" in bd.lineage(pairs) or "PythonRDD" in bd.lineage(pairs)
+
+
+# ---------------------------------------------------------------------------
+# Ajouts : window function, legacy eager, Spark
+# ---------------------------------------------------------------------------
+
+from nimbus.bd2_legacy_report import wettest_months as legacy_wettest  # noqa: E402
+
+
+def test_temperature_anomalies(csv_path):
+    df = bd.temperature_anomalies(bd.clean(bd.scan_lazy(csv_path))).collect()
+    assert df.columns == ["date", "station", "temperature_c", "anomaly"]
+    means = df.group_by("station").agg(pl.col("anomaly").mean())
+    assert means["anomaly"].abs().max() < 1e-9               # écart moyen nul par station
+    assert df["temperature_c"].null_count() == 0
+
+
+def as_triples(df):
+    return [(r[0], int(r[1]), r[2]) for r in df.select("station", "month", "rain_mm").iter_rows()]
+
+
+def test_wettest_months_identique_au_legacy(csv_path):
+    expected = legacy_wettest(csv_path, 2017, 10)
+    actual = as_triples(bd.wettest_months(bd.clean(bd.scan_lazy(csv_path)), 2017, 10).collect())
+    assert [(s, m) for s, m, _ in actual] == [(s, m) for s, m, _ in expected]
+    assert all(math.isclose(a[2], e[2], abs_tol=0.051) for a, e in zip(actual, expected))
+
+
+def test_wettest_months_ne_lit_que_trois_colonnes(csv_path):
+    text = bd.plan(bd.wettest_months(bd.clean(bd.scan_lazy(csv_path)), 2017, 10))
+    assert "3/7" in text                                     # projection pushdown : date, station, rain_mm
+
+
+def test_spark_wettest_months_identique(spark, csv_path):
+    expected = as_triples(bd.wettest_months(bd.clean(bd.scan_lazy(csv_path)), 2017, 10).collect())
+    rows = bd.spark_wettest_months(bd.spark_clean(bd.spark_read(spark, csv_path)), 2017, 10).collect()
+    actual = [(r["station"], int(r["month"]), r["rain_mm"]) for r in rows]
+    assert [(s, m) for s, m, _ in actual] == [(s, m) for s, m, _ in expected]
+    assert all(math.isclose(a[2], e[2], abs_tol=0.051) for a, e in zip(actual, expected))
